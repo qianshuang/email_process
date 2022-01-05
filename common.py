@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import datetime
+import re
 
 
 def open_file(filename, mode='r'):
@@ -49,5 +50,14 @@ def process_cont(conts):
     final_conts = []
     conts = conts.split("&&&&&&")[:-1]
     for cont in conts:
-        final_conts.append(cont.replace("\n", " "))
+        cont = cont.replace("\n", " ")
+
+        # 剔除style及html标签
+        cont = re.sub(r'<style.+?</style>', '', cont)
+        cont = re.sub(r'<(.|\n)+?>', '', cont)
+        cont = re.sub(r'CAUTION:.*know the content is safe', '', cont)
+        cont = re.sub(r'(&nbsp;|‌|&#8204;|‌ )', ' ', cont)
+        cont = re.sub(r'\s+', ' ', cont)
+
+        final_conts.append(cont)
     return final_conts
