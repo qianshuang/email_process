@@ -1,0 +1,1 @@
+run main.py文件即得到全部邮件解析结果（emails.txt）。
