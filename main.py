@@ -10,9 +10,12 @@ import pandas as pd
 ORI_DATA = "ori_data"
 
 df_final = pd.DataFrame()
+subjects_ori = []
 subjects = []
 contents = []
 times = []
+froms = []
+tos = []
 
 for file_name in os.listdir(ORI_DATA):
     file_path = os.path.join(ORI_DATA, file_name)
@@ -28,24 +31,31 @@ for file_name in os.listdir(ORI_DATA):
                     mBody.append(cont)
         cont = "@@@".join(mBody)
         if cont != "":
-            subjects.append(eml.get("SUBJECT").replace("\n", " "))
+            subject_ori = eml.get("SUBJECT").replace("\n", " ")
+            subject = re.sub(r"^RE: ", "", subject_ori)
+            subject = re.sub(r"^re: ", "", subject)
+
+            subjects_ori.append(subject_ori)
+            subjects.append(subject)
             times.append(time_process(eml.get("DATE")))
             contents.append(cont + "&&&&&&")
+            froms.append(eml.get("FROM").replace("\n", " "))
+            tos.append(str(eml.get("TO")).replace("\n", " "))
 
-write_lines("subject.txt", subjects)
 write_lines("content.txt", contents)
-write_lines("time.txt", times)
 write_lines("content.txt", process_cont(open_file("content.txt").read()))
 
 df_final = pd.DataFrame()
-df_final["subject"] = read_file("subject.txt")
+df_final["subject_ori"] = subjects_ori
+df_final["subject"] = subjects
 df_final["content"] = read_file("content.txt")
-df_final["time"] = read_file("time.txt")
+df_final["time"] = times
+df_final["from"] = froms
+df_final["to"] = tos
 
+# 整理邮件：原始邮件与回复聚合
 df_final = df_final.groupby('subject').apply(lambda x: x.sort_values('time'))
+
 print(df_final)
 df_final.to_csv("emails.txt", sep="\t", index=False)
-
-os.remove("subject.txt")
 os.remove("content.txt")
-os.remove("time.txt")
